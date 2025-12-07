@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalCal – Nutrition Finder</title>
+    
+    <!-- =========================================
+             STYLE.CSS
+             (Copy the content inside <style> to style.css)
+    ========================================== -->
+    <style>
+        :root {
+            /* Light Mode Variables */
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --primary: #3182ce;
+            --primary-hover: #2b6cb0;
+            --accent: #ed8936;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode Variables */
+            --bg-color: #1a202c;
+            --card-bg: #2d3748;
+            --text-main: #f7fafc;
+            --text-muted: #a0aec0;
+            --primary: #63b3ed;
+            --primary-hover: #4299e1;
+            --accent: #f6ad55;
+            --border: #4a5568;
+            --input-bg: #2d3748;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* --- Header --- */
+        header {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] .icon-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* --- Main Container --- */
+        main {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* --- Search Card --- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+
+        button.primary-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        button.primary-btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- Result Section --- */
+        #result-section {
+            display: none; /* Hidden by default */
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .food-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .serving-info {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .macros-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .macro-card {
+            background-color: rgba(0,0,0,0.02);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .macro-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .macro-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calories .macro-value { color: var(--accent); }
+
+        /* --- History Section --- */
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .clear-btn {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Added to align items vertically */
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+        }
+
+        .history-item:last-child { border-bottom: none; }
+        
+        .history-item:hover {
+            background-color: rgba(0,0,0,0.02);
+        }
+
+        /* --- Modal --- */
+        .modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .modal h2 { margin-bottom: 16px; font-size: 1.2rem; }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* --- Utility & Animation --- */
+        .hidden { display: none !important; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg {
+            color: #e53e3e;
+            background-color: rgba(229, 62, 62, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .api-warning {
+            font-size: 0.8rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>CalCal</h1>
+        <div class="header-controls">
+            <button class="icon-btn" id="theme-toggle" aria-label="Toggle Dark Mode">
+                <!-- Sun/Moon SVG managed by JS -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            <button class="icon-btn" id="settings-btn" aria-label="Settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Input Section -->
+        <section class="card">
+            <div id="error-box" class="error-msg hidden"></div>
+            <div class="input-group">
+                <input type="text" id="food-input" placeholder="Enter food (e.g., Apple, Chicken Breast)">
+                <div class="input-row">
+                    <input type="number" id="grams-input" placeholder="Grams" value="100">
+                    <button id="calc-btn" class="primary-btn">Calculate</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Result Section -->
+        <section id="result-section" class="card hidden">
+            <div class="result-header">
+                <div>
+                    <div id="res-name" class="food-title">Food Name</div>
+                    <div id="res-grams" class="serving-info">100g serving</div>
+                </div>
+            </div>
+            <div class="macros-grid">
+                <div class="macro-card calories">
+                    <span class="macro-value" id="val-cals">0</span>
+                    <span class="macro-label">Calories</span>
+                </div>
+                <div class="macro-card">
+                    <span class="macro-value" id="val-protein">0g</span>
+                    <span class="macro-label">Protein</span>
+                </div>
+                <div class="macro-card">
+                    <span class="macro-value" id="val-carbs">0g</span>
+                    <span class="macro-label">Carbs</span>
+                </div>
+                <div class="macro-card">
+                    <span class="macro-value" id="val-fat">0g</span>
+                    <span class="macro-label">Fat</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section class="card">
+            <div class="history-header">
+                <h3>History</h3>
+                <button id="clear-history" class="clear-btn">Clear</button>
+            </div>
+            <ul id="history-list" class="history-list">
+                <!-- JS populates this -->
+                <li style="text-align:center; color: var(--text-muted); padding: 10px;">No history yet.</li>
+            </ul>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Settings</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 15px; color: var(--text-muted);">
+                Enter your USDA FoodData Central API Key. 
+                <br><a href="https://fdc.nal.usda.gov/api-key-signup.html" target="_blank" style="color: var(--primary);">Get a key here</a>.
+            </p>
+            <input type="text" id="api-key-input" placeholder="Paste API Key here">
+            <p id="key-status" class="api-warning" style="margin-top: 8px;">No key saved. Using Mock Data Mode.</p>
+            <div class="modal-actions">
+                <button id="close-settings" class="btn-secondary">Close</button>
+                <button id="save-key" class="primary-btn" style="width: auto;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+             SCRIPT.JS
+    ========================================== -->
+    <script>
+        // DOM Elements
+        const foodInput = document.getElementById('food-input');
+        const gramsInput = document.getElementById('grams-input');
+        const calcBtn = document.getElementById('calc-btn');
+        const resultSection = document.getElementById('result-section');
+        const errorBox = document.getElementById('error-box');
+        const historyList = document.getElementById('history-list');
+        
+        // Modal Elements
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsBtn = document.getElementById('settings-btn');
+        const closeSettingsBtn = document.getElementById('close-settings');
+        const saveKeyBtn = document.getElementById('save-key');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const keyStatus = document.getElementById('key-status');
+
+        // Theme Elements
+        const themeBtn = document.getElementById('theme-toggle');
+        
+        // State
+        let apiKey = localStorage.getItem('calcal_api_key') || '';
+        let history = JSON.parse(localStorage.getItem('calcal_history') || '[]');
+
+        // --- Initialization ---
+        function init() {
+            // Load Theme
+            const savedTheme = localStorage.getItem('calcal_theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+
+            // Load History
+            renderHistory();
+
+            // Check Key
+            updateKeyStatus();
+            apiKeyInput.value = apiKey;
+        }
+
+        // --- Theme Logic ---
+        themeBtn.addEventListener('click', () => {
+            const current = document.body.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', next);
+            localStorage.setItem('calcal_theme', next);
+            updateThemeIcon(next);
+        });
+
+        function updateThemeIcon(theme) {
+            if (theme === 'dark') {
+                themeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+            } else {
+                themeBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+            }
+        }
+
+        // --- Settings Modal Logic ---
+        settingsBtn.addEventListener('click', () => settingsModal.classList.add('active'));
+        closeSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('active'));
+        
+        saveKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                apiKey = key;
+                localStorage.setItem('calcal_api_key', key);
+                updateKeyStatus();
+                settingsModal.classList.remove('active');
+            } else {
+                apiKey = '';
+                localStorage.removeItem('calcal_api_key');
+                updateKeyStatus();
+            }
+        });
+
+        function updateKeyStatus() {
+            if (apiKey) {
+                keyStatus.textContent = "API Key saved. Ready to fetch.";
+                keyStatus.style.color = "var(--primary)";
+            } else {
+                keyStatus.textContent = "No key saved. Using Mock Data Mode.";
+                keyStatus.style.color = "var(--accent)";
+            }
+        }
+
+        // --- Main Calculation Logic ---
+        calcBtn.addEventListener('click', handleCalculation);
+
+        async function handleCalculation() {
+            const food = foodInput.value.trim();
+            const grams = parseFloat(gramsInput.value);
+
+            // Validation
+            if (!food) {
+                showError("Please enter a food name.");
+                return;
+            }
+            if (!grams || grams <= 0) {
+                showError("Please enter a valid weight in grams.");
+                return;
+            }
+
+            // UI Loading State
+            showError(null); // Clear errors
+            const originalBtnText = calcBtn.innerHTML;
+            calcBtn.innerHTML = '<span class="spinner"></span> Finding...';
+            calcBtn.disabled = true;
+
+            try {
+                let data;
+                
+                if (!apiKey) {
+                    // MOCK MODE
+                    await new Promise(r => setTimeout(r, 800)); // Fake delay
+                    data = getMockData(food);
+                } else {
+                    // REAL API MODE
+                    data = await fetchFromUSDA(food);
+                }
+
+                if (!data) throw new Error("Food not found.");
+
+                // Process Data
+                const nutrients = extractNutrients(data, grams);
+                
+                // Update UI (This already correctly displays all 4 values)
+                displayResults(data.description, grams, nutrients);
+                
+                // Add to History (UPDATED to save all nutrients)
+                addToHistory(data.description, grams, nutrients);
+
+            } catch (err) {
+                showError(err.message || "Something went wrong. Check your API key.");
+            } finally {
+                calcBtn.innerHTML = originalBtnText;
+                calcBtn.disabled = false;
+            }
+        }
+
+        // --- API & Data Handling ---
+
+        async function fetchFromUSDA(query) {
+            // Step 1: Search
+            const searchUrl = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(query)}&pageSize=1&api_key=${apiKey}`;
+            const searchRes = await fetch(searchUrl);
+            
+            if (!searchRes.ok) {
+                if(searchRes.status === 403) throw new Error("Invalid API Key.");
+                throw new Error("Network error during search.");
+            }
+            
+            const searchData = await searchRes.json();
+            if (!searchData.foods || searchData.foods.length === 0) return null;
+
+            const fdcId = searchData.foods[0].fdcId;
+
+            // Step 2: Get Details
+            const detailUrl = `https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${apiKey}`;
+            const detailRes = await fetch(detailUrl);
+            
+            if (!detailRes.ok) throw new Error("Could not fetch food details.");
+            
+            return await detailRes.json();
+        }
+
+        function extractNutrients(foodData, grams) {
+            // USDA nutrient IDs: Energy=1008/2047, Protein=1003, Fat=1004, Carbs=1005
+            const nutrients = foodData.foodNutrients;
+            
+            const findNutrient = (ids) => {
+                const found = nutrients.find(n => {
+                    const id = n.nutrient ? n.nutrient.id : n.nutrientId; // Handle different API structures
+                    return ids.includes(id);
+                });
+                return found ? found.amount : 0;
+            };
+
+            const baseCal = findNutrient([1008, 2047, 1008]); // KCAL
+            const baseProt = findNutrient([1003]);
+            const baseFat = findNutrient([1004]);
+            const baseCarb = findNutrient([1005]);
+
+            const ratio = grams / 100;
+
+            return {
+                calories: Math.round(baseCal * ratio),
+                protein: (baseProt * ratio).toFixed(1),
+                fat: (baseFat * ratio).toFixed(1),
+                carbs: (baseCarb * ratio).toFixed(1)
+            };
+        }
+
+        function getMockData(query) {
+            // Fallback for demo purposes without API Key
+            const mockDB = {
+                'apple': { description: 'Apple (Mock)', foodNutrients: [{nutrientId: 1008, amount: 52}, {nutrientId: 1003, amount: 0.3}, {nutrientId: 1004, amount: 0.2}, {nutrientId: 1005, amount: 14}] },
+                'chicken': { description: 'Chicken Breast (Mock)', foodNutrients: [{nutrientId: 1008, amount: 165}, {nutrientId: 1003, amount: 31}, {nutrientId: 1004, amount: 3.6}, {nutrientId: 1005, amount: 0}] },
+                'egg': { description: 'Egg (Mock)', foodNutrients: [{nutrientId: 1008, amount: 155}, {nutrientId: 1003, amount: 13}, {nutrientId: 1004, amount: 11}, {nutrientId: 1005, amount: 1.1}] },
+            };
+            
+            // Return specific mock or random generated one
+            const lowerQ = query.toLowerCase();
+            if (mockDB[lowerQ]) return mockDB[lowerQ];
+
+            // Generic Mock
+            return {
+                description: `${query} (Mock Data)`,
+                foodNutrients: [
+                    {nutrientId: 1008, amount: Math.floor(Math.random() * 300) + 50}, // Cal
+                    {nutrientId: 1003, amount: Math.floor(Math.random() * 20)}, // Prot
+                    {nutrientId: 1004, amount: Math.floor(Math.random() * 15)}, // Fat
+                    {nutrientId: 1005, amount: Math.floor(Math.random() * 50)}  // Carb
+                ]
+            };
+        }
+
+        // --- UI Updates ---
+
+        function displayResults(name, grams, nutrients) {
+            document.getElementById('res-name').textContent = name;
+            document.getElementById('res-grams').textContent = `${grams}g serving`;
+            
+            // This section already correctly updates all 4 macro fields
+            document.getElementById('val-cals').textContent = nutrients.calories;
+            document.getElementById('val-protein').textContent = nutrients.protein + 'g';
+            document.getElementById('val-carbs').textContent = nutrients.carbs + 'g';
+            document.getElementById('val-fat').textContent = nutrients.fat + 'g';
+
+            resultSection.classList.remove('hidden');
+            // Re-trigger animation
+            resultSection.style.animation = 'none';
+            resultSection.offsetHeight; /* trigger reflow */
+            resultSection.style.animation = 'fadeIn 0.4s ease-out';
+        }
+
+        function showError(msg) {
+            if (!msg) {
+                errorBox.classList.add('hidden');
+                return;
+            }
+            errorBox.textContent = msg;
+            errorBox.classList.remove('hidden');
+        }
+
+        // --- History System (UPDATED) ---
+
+        /**
+         * Saves food item with all macronutrients to history.
+         * @param {string} name 
+         * @param {number} grams 
+         * @param {object} nutrients - { calories, protein, carbs, fat }
+         */
+        function addToHistory(name, grams, nutrients) {
+            const newItem = { 
+                name, 
+                grams, 
+                cals: nutrients.calories,
+                protein: nutrients.protein, // Storing all macros
+                carbs: nutrients.carbs,     // Storing all macros
+                fat: nutrients.fat,         // Storing all macros
+                id: Date.now() 
+            };
+            history.unshift(newItem); // Add to top
+            if (history.length > 20) history.pop(); // Keep max 20
+            
+            localStorage.setItem('calcal_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = '';
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<li style="text-align:center; color: var(--text-muted); padding: 10px;">No history yet.</li>';
+                return;
+            }
+
+            history.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                // UPDATED: Now displays P/C/F below the food name
+                li.innerHTML = `
+                    <div style="display:flex; flex-direction:column;">
+                        <span><strong>${item.name}</strong> <span style="font-size:0.85em; color:var(--text-muted)">(${item.grams}g)</span></span>
+                        <span style="font-size:0.8rem; color:var(--text-muted); margin-top: 4px;">
+                            P: ${item.protein}g | C: ${item.carbs}g | F: ${item.fat}g
+                        </span>
+                    </div>
+                    <span style="font-weight: 600; color: var(--accent); white-space: nowrap;">${item.cals} kcal</span>
+                `;
+                historyList.appendChild(li);
+            });
+        }
+
+        document.getElementById('clear-history').addEventListener('click', () => {
+            history = [];
+            localStorage.removeItem('calcal_history');
+            renderHistory();
+        });
+
+        // Start App
+        init();
+    </script>
+</body>
+</html>
